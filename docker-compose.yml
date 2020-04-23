@@ -1,0 +1,57 @@
+version: '3'
+
+#Docker Networks
+networks:
+  play-my-song:
+
+services:
+
+#Nginx Service
+    nginx:
+      image: nginx:stable-alpine
+      container_name: nginx
+      ports:
+        - "8081:80"
+        - "4431:443"
+      volumes:
+        - ./src:/var/www
+        - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      depends_on:
+        - php
+        - mysql
+      networks:
+        - play-my-song
+
+    #PHP Service
+    php:
+      build:
+        context: .
+        dockerfile: Dockerfile
+      container_name: php
+      volumes:
+        - ./src:/var/www
+      ports:
+        - "9000:9000"
+      networks:
+        - play-my-song
+
+
+
+    #MySQL Service
+    mysql:
+      image: mysql:5.7.22
+      container_name: mysql
+      restart: unless-stopped
+      tty: true
+      ports:
+        - "3316:3306"
+      environment:
+        MYSQL_DATABASE: playmysong
+        MYSQL_USER: playmysong
+        MYSQL_PASSWORD: secret
+        MYSQL_ROOT_PASSWORD: secret
+        SERVICE_TAGS: dev
+        SERVICE_NAME: mysql
+      networks:
+        - play-my-song
+
